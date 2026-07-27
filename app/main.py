@@ -49,7 +49,7 @@ def main():
     print(chat.choices[0].message.content)
     first_tc = chat.choices[0].message.tool_calls[0]
     
-    arguments_json = first_tc.arguments
+    arguments_json = first_tc.function.arguments
     arguments_dict = json.loads(arguments_json)
     path = arguments_dict["file_path"]
     
