@@ -17,46 +17,45 @@ def main():
         raise RuntimeError("OPENROUTER_API_KEY is not set")
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-
-    chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "Read",
-                "description": "Read and return the contents of a file",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "file_path": {
-                            "type": "string",
-                            "description": "The path to the file to read"
-                            }
-                        },
-                    "required": ["file_path"]
-                    }
+    messages= [{"role": "user", "content": args.p}]
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "Read",
+            "description": "Read and return the contents of a file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "The path to the file to read"
+                        }
+                    },
+                "required": ["file_path"]
                 }
-            }]
-        )
+            }
+        }]
+    
+    for m in messages:
+        chat = client.chat.completions.create(model="anthropic/claude-haiku-4.5", messages=[m], tools=tools)
+        if not chat.choices or len(chat.choices) == 0:
+            raise RuntimeError("no choices in response")
 
-    if not chat.choices or len(chat.choices) == 0:
-        raise RuntimeError("no choices in response")
+        # You can use print statements as follows for debugging, they'll be visible when running tests.
+        print("Logs from your program will appear here!", file=sys.stderr)
+        for c in chat.choices:
+            if len(c.message.tool_calls) == 0:
+                print(c.message.content)
 
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!", file=sys.stderr)
-    for c in chat.choices:
-        if len(c.message.tool_calls) == 0:
-            print(c.message.content)
+            for tc in c.message.tool_calls or []:
+               arguments_dict = json.loads(tc.function.arguments)
+               path = arguments_dict["file_path"]
 
-        for tc in c.message.tool_calls or []:
-           arguments_dict = json.loads(tc.function.arguments)
-           path = arguments_dict["file_path"]
+               if tc.function.name == "Read":
+                   with open(path, "r", encoding="utf-8") as file:
+                       content = file.read()
+                       messages.append({role: "user", content: content})
 
-           if tc.function.name == "Read":
-               with open(path, "r", encoding="utf-8") as file:
-                   content = file.read()
-
-           print(content)
+               print(content)
 if __name__ == "__main__":
     main()
