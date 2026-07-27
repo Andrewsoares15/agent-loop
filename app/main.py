@@ -45,17 +45,18 @@ def main():
 
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
-    if(chat.choices[0].message.content):
-        print(chat.choices[0].message.content)
+    for c in chat.choices:
+        if(len(c.message.tool_calls) == 0:
+            print(c.message.content)
 
-    for tc in chat.choices[0].message.tool_calls or []: 
-        arguments_dict = json.loads(tc.function.arguments)
-        path = arguments_dict["file_path"]
+        for tc in c.message.tool_calls or []:
+           arguments_dict = json.loads(tc.function.arguments)
+           path = arguments_dict["file_path"]
 
-        if tc.function.name == "Read":
-            with open(path, "r", encoding="utf-8") as file:
-                content = file.read()
+           if tc.function.name == "Read":
+           with open(path, "r", encoding="utf-8") as file:
+           content = file.read()
 
-        print(content)
+           print(content)
 if __name__ == "__main__":
     main()
