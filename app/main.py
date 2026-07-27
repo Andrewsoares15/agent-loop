@@ -74,18 +74,18 @@ def main():
             arguments_dict = json.loads(tc.function.arguments)
             path = arguments_dict["file_path"]
 
-           if tc.function.name == "Read":
-               with open(path, "r", encoding="utf-8") as file:
-                   content = file.read()
-                   messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
-           elif tc.function.name == "Write":
-               try:
-                   with open(path, "w", encoding="utf-8") as file:
-                       file.write(arguments_dict["content"])
-                       tool_response = "Success"
-               except Exception as e:
-                   tool_response = f"Error writing file: {str(e)}"
-               messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
+            if tc.function.name == "Read":
+                with open(path, "r", encoding="utf-8") as file:
+                    content = file.read()
+                    messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
+            elif tc.function.name == "Write":
+                try:
+                    with open(path, "w", encoding="utf-8") as file:
+                        file.write(arguments_dict["content"])
+                        tool_response = "Success"
+                except Exception as e:
+                    tool_response = f"Error writing file: {str(e)}"
+                messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
 
 if __name__ == "__main__":
     main()
