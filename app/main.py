@@ -77,10 +77,12 @@ def main():
            if tc.function.name == "Read":
                with open(path, "r", encoding="utf-8") as file:
                    content = file.read()
-                   messages.append({"role": "tool","tool_call_id": tc.id, "content": content})
+                   messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
            elif tc.function.name == "Write":
                with open(path, "w", encoding="utf-8") as file:
                    file.write(arguments_dict["content"])
+                   messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
+
 
 if __name__ == "__main__":
     main()
