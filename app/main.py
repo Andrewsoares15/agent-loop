@@ -78,6 +78,7 @@ def main():
                with open(path, "r", encoding="utf-8") as file:
                    content = file.read()
                    messages.append({"role": "tool","tool_call_id": tc.id, "content": content})
+           elif tc.function.name == "Write":
                with open(path, "w", encoding="utf-8") as file:
                    file.write(arguments_dict["content"])
 
