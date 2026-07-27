@@ -46,7 +46,6 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
-    print(chat.choices[0].message.content)
     first_tc = chat.choices[0].message.tool_calls[0]
     
     arguments_json = first_tc.function.arguments
