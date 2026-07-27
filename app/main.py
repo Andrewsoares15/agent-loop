@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import json
+import subprocess
 from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -55,6 +56,23 @@ def main():
                            }
                        }
                    }
+               },
+           {
+               "type": "function",
+               "function": {
+                   "name": "Bash",
+                   "description": "Execute a shell command",
+                   "parameters": {
+                       "type": "object",
+                       "required": ["command"],
+                       "properties": {
+                           "command": {
+                               "type": "string",
+                               "description": "The command to execute"
+                               }
+                           }
+                       }
+                   }
                }
            ]
 
@@ -65,6 +83,7 @@ def main():
 
         # You can use print statements as follows for debugging, they'll be visible when running tests.
         print("Logs from your program will appear here!", file=sys.stderr)
+
         r = chat.choices[0]
         if not r.message.tool_calls:
             print(r.message.content)
@@ -85,7 +104,10 @@ def main():
                         tool_response = "Success"
                 except Exception as e:
                     tool_response = f"Error writing file: {str(e)}"
-                messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
+            elif tc.function.name == "Bash":
+                tool_response = subprocess.run([arguments_dict["command"], capture_output=True, text=True)
+            messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
+
 
 if __name__ == "__main__":
     main()
