@@ -114,7 +114,7 @@ def main():
                     tool_response = f"Error writing file: {str(e)}"
 
 
-            messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
+            messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": tc.function.name})
 
 
 if __name__ == "__main__":
