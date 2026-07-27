@@ -54,7 +54,7 @@ def main():
                if tc.function.name == "Read":
                    with open(path, "r", encoding="utf-8") as file:
                        content = file.read()
-                       messages.append({role: "user", content: content})
+                       messages.append({"role": "user", "content": content})
 
                print(content)
 if __name__ == "__main__":
