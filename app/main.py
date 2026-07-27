@@ -47,7 +47,7 @@ def main():
         if not r.message.tool_calls:
             print(r.message.content)
             break
-        message.append(r.message)
+        messages.append(r.message)
         for tc in r.message.tool_calls or []:
            arguments_dict = json.loads(tc.function.arguments)
            path = arguments_dict["file_path"]
