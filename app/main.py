@@ -36,8 +36,8 @@ def main():
             }
         }]
     
-    for m in messages:
-        chat = client.chat.completions.create(model="anthropic/claude-haiku-4.5", messages=[m], tools=tools)
+    while True:
+        chat = client.chat.completions.create(model="anthropic/claude-haiku-4.5", messages=messages, tools=tools)
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
 
