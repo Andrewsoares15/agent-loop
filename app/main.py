@@ -72,7 +72,7 @@ def main():
         messages.append(r.message)
         for tc in r.message.tool_calls or []:
             arguments_dict = json.loads(tc.function.arguments)
-           path = arguments_dict["file_path"]
+            path = arguments_dict["file_path"]
 
            if tc.function.name == "Read":
                with open(path, "r", encoding="utf-8") as file:
