@@ -58,6 +58,5 @@ def main():
                    content = file.read()
                    messages.append({"role": "user", "content": content})
 
-           print(content)
 if __name__ == "__main__":
     main()
