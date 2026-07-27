@@ -55,7 +55,7 @@ def main():
 
            if tc.function.name == "Read":
            with open(path, "r", encoding="utf-8") as file:
-           content = file.read()
+               content = file.read()
 
            print(content)
 if __name__ == "__main__":
