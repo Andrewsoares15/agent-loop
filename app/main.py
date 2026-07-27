@@ -96,8 +96,7 @@ def main():
                 path = arguments_dict["file_path"]
 
                 with open(path, "r", encoding="utf-8") as file:
-                    content = file.read()
-                    messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
+                    tool_response = file.read()
             elif tc.function.name == "Write":
                 path = arguments_dict["file_path"]
 
