@@ -79,10 +79,15 @@ def main():
                    content = file.read()
                    messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
            elif tc.function.name == "Write":
-               with open(path, "w", encoding="utf-8") as file:
-                   file.write(arguments_dict["content"])
-                   messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
+               try:
+                   with open(path, "w", encoding="utf-8") as file:
+                        file.write(arguments_dict["content"])
+                        tool_response = "Success"
+                        messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
+                except:
+                    tool_response = f"Error writing file: {str(e)}"
 
+                messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
 
 if __name__ == "__main__":
     main()
