@@ -91,13 +91,16 @@ def main():
         messages.append(r.message)
         for tc in r.message.tool_calls or []:
             arguments_dict = json.loads(tc.function.arguments)
-            path = arguments_dict["file_path"] or none
 
             if tc.function.name == "Read":
+                path = arguments_dict["file_path"]
+
                 with open(path, "r", encoding="utf-8") as file:
                     content = file.read()
                     messages.append({"role": "tool","tool_call_id": tc.id, "content": content, "name": "Read"})
             elif tc.function.name == "Write":
+                path = arguments_dict["file_path"]
+
                 try:
                     with open(path, "w", encoding="utf-8") as file:
                         file.write(arguments_dict["content"])
