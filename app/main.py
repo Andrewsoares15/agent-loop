@@ -82,12 +82,10 @@ def main():
                try:
                    with open(path, "w", encoding="utf-8") as file:
                        file.write(arguments_dict["content"])
-                        tool_response = "Success"
-                        messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
+                       tool_response = "Success"
                except Exception as e:
                    tool_response = f"Error writing file: {str(e)}"
-
-                messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
+               messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
 
 if __name__ == "__main__":
     main()
