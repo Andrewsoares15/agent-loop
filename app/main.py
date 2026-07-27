@@ -56,8 +56,8 @@ def main():
                        }
                    }
                }
-    ]
-    
+           ]
+
     while True:
         chat = client.chat.completions.create(model="anthropic/claude-haiku-4.5", messages=messages, tools=tools)
         if not chat.choices or len(chat.choices) == 0:
@@ -71,7 +71,7 @@ def main():
             break
         messages.append(r.message)
         for tc in r.message.tool_calls or []:
-           arguments_dict = json.loads(tc.function.arguments)
+            arguments_dict = json.loads(tc.function.arguments)
            path = arguments_dict["file_path"]
 
            if tc.function.name == "Read":
@@ -81,11 +81,11 @@ def main():
            elif tc.function.name == "Write":
                try:
                    with open(path, "w", encoding="utf-8") as file:
-                        file.write(arguments_dict["content"])
+                       file.write(arguments_dict["content"])
                         tool_response = "Success"
                         messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
-                except Exception as e:
-                    tool_response = f"Error writing file: {str(e)}"
+               except Exception as e:
+                   tool_response = f"Error writing file: {str(e)}"
 
                 messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
 
