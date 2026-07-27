@@ -44,11 +44,10 @@ def main():
         # You can use print statements as follows for debugging, they'll be visible when running tests.
         print("Logs from your program will appear here!", file=sys.stderr)
         r = chat.choices[0]
-        messages.append(r.message)
         if not r.message.tool_calls:
             print(r.message.content)
             break
-
+        messages.append(r.message)
         for tc in r.message.tool_calls or []:
            arguments_dict = json.loads(tc.function.arguments)
            path = arguments_dict["file_path"]
