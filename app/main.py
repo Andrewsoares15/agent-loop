@@ -45,7 +45,7 @@ def main():
         print("Logs from your program will appear here!", file=sys.stderr)
         r = chat.choices[0]
         messages.append(r.message)
-        if !r.message.tool_calls:
+        if not r.message.tool_calls:
             print(r.message.content)
             break
 
