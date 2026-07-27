@@ -84,7 +84,7 @@ def main():
                         file.write(arguments_dict["content"])
                         tool_response = "Success"
                         messages.append({"role": "tool","tool_call_id": tc.id, "content": "Success", "name": "Write"})
-                except:
+                except Exception as e:
                     tool_response = f"Error writing file: {str(e)}"
 
                 messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
