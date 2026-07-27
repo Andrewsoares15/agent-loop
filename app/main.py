@@ -109,7 +109,12 @@ def main():
                     tool_response = f"Error writing file: {str(e)}"
             elif tc.function.name == "Bash":
                 try:
-                    tool_response = subprocess.run([arguments_dict["command"]], capture_output=True, text=True)
+                    result = subprocess.run(arguments_dict["command"], shell=True, capture_output=True, text=True)
+
+                    if result.returncode == 0:
+                        tool_response = result.stdout
+                    else:
+                        tool_response = f"Error (Exit Code {result.returncode}):\n{result.stderr}"
                 except Exception as e:
                     tool_response = f"Error writing file: {str(e)}"
 
