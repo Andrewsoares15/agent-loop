@@ -108,7 +108,12 @@ def main():
                 except Exception as e:
                     tool_response = f"Error writing file: {str(e)}"
             elif tc.function.name == "Bash":
-                tool_response = subprocess.run([arguments_dict["command"]], capture_output=True, text=True)
+                try:
+                    tool_response = subprocess.run([arguments_dict["command"]], capture_output=True, text=True)
+                except Exception as e:
+                    tool_response = f"Error writing file: {str(e)}"
+
+
             messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": "Write"})
 
 
