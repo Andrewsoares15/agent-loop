@@ -1,25 +1,16 @@
 import argparse
-import os
-import sys
 import json
+import os
 import subprocess
+
 from openai import OpenAI
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
-BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
+MODEL = "anthropic/claude-haiku-4.5"
+BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("-p", required=True)
-    args = p.parse_args()
-
-    if not API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set")
-
-    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-    messages= [{"role": "user", "content": args.p}]
-    tools=[{
+TOOLS = [
+    {
         "type": "function",
         "function": {
             "name": "Read",
@@ -27,97 +18,109 @@ def main():
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "The path to the file to read"
-                        }
-                    },
-                "required": ["file_path"]
-                }
-            }
+                    "file_path": {"type": "string", "description": "File to read"}
+                },
+                "required": ["file_path"],
+            },
         },
-           {
-               "type": "function",
-               "function": {
-                   "name": "Write",
-                   "description": "Write content to a file",
-                   "parameters": {
-                       "type": "object",
-                       "required": ["file_path", "content"],
-                       "properties": {
-                           "file_path": {
-                               "type": "string",
-                               "description": "The path of the file to write to"
-                               },
-                           "content": {
-                               "type": "string",
-                               "description": "The content to write to the file"
-                               }
-                           }
-                       }
-                   }
-               },
-           {
-               "type": "function",
-               "function": {
-                   "name": "Bash",
-                   "description": "Execute a shell command",
-                   "parameters": {
-                       "type": "object",
-                       "required": ["command"],
-                       "properties": {
-                           "command": {
-                               "type": "string",
-                               "description": "The command to execute"
-                               }
-                           }
-                       }
-                   }
-               }
-           ]
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Write",
+            "description": "Write content to a file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "File to write"},
+                    "content": {"type": "string", "description": "Content to write"},
+                },
+                "required": ["file_path", "content"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Bash",
+            "description": "Execute a shell command",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "Command to execute"}
+                },
+                "required": ["command"],
+            },
+        },
+    },
+]
+
+
+def run_tool(name, arguments):
+    """Run a tool requested by the model and return its result."""
+    try:
+        if name == "Read":
+            with open(arguments["file_path"], encoding="utf-8") as file:
+                return file.read()
+
+        if name == "Write":
+            with open(arguments["file_path"], "w", encoding="utf-8") as file:
+                file.write(arguments["content"])
+            return "Success"
+
+        if name == "Bash":
+            result = subprocess.run(
+                arguments["command"], shell=True, capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                return result.stdout
+            return f"Error (Exit Code {result.returncode}):\n{result.stderr}"
+
+        return f"Error: unknown tool '{name}'"
+    except (OSError, KeyError, TypeError) as error:
+        return f"Error running {name}: {error}"
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--prompt", required=True)
+    args = parser.parse_args()
+
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY is not set")
+
+    client = OpenAI(api_key=api_key, base_url=BASE_URL)
+    messages = [{"role": "user", "content": args.prompt}]
 
     while True:
-        chat = client.chat.completions.create(model="anthropic/claude-haiku-4.5", messages=messages, tools=tools)
-        if not chat.choices or len(chat.choices) == 0:
-            raise RuntimeError("no choices in response")
+        response = client.chat.completions.create(
+            model=MODEL, messages=messages, tools=TOOLS
+        )
+        if not response.choices:
+            raise RuntimeError("No choices in response")
 
-        print("Logs from your program will appear here!", file=sys.stderr)
+        message = response.choices[0].message
+        if not message.tool_calls:
+            print(message.content or "")
+            return
 
-        r = chat.choices[0]
-        if not r.message.tool_calls:
-            print(r.message.content)
-            break
-        messages.append(r.message)
-        for tc in r.message.tool_calls or []:
-            arguments_dict = json.loads(tc.function.arguments)
+        messages.append(message)
+        for tool_call in message.tool_calls:
+            try:
+                arguments = json.loads(tool_call.function.arguments)
+                tool_response = run_tool(tool_call.function.name, arguments)
+            except json.JSONDecodeError as error:
+                tool_response = f"Error: invalid tool arguments: {error}"
 
-            if tc.function.name == "Read":
-                path = arguments_dict["file_path"]
-
-                with open(path, "r", encoding="utf-8") as file:
-                    tool_response = file.read()
-            elif tc.function.name == "Write":
-                path = arguments_dict["file_path"]
-
-                try:
-                    with open(path, "w", encoding="utf-8") as file:
-                        file.write(arguments_dict["content"])
-                        tool_response = "Success"
-                except Exception as e:
-                    tool_response = f"Error writing file: {str(e)}"
-            elif tc.function.name == "Bash":
-                try:
-                    result = subprocess.run(arguments_dict["command"], shell=True, capture_output=True, text=True)
-
-                    if result.returncode == 0:
-                        tool_response = result.stdout
-                    else:
-                        tool_response = f"Error (Exit Code {result.returncode}):\n{result.stderr}"
-                except Exception as e:
-                    tool_response = f"Error writing file: {str(e)}"
-
-
-            messages.append({"role": "tool","tool_call_id": tc.id, "content": tool_response, "name": tc.function.name})
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "name": tool_call.function.name,
+                    "content": tool_response,
+                }
+            )
 
 
 if __name__ == "__main__":
